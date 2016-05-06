@@ -11,7 +11,7 @@ NSString * const kMPErrorDomain = @"com.mopub.iossdk";
 
 @implementation MPError
 
-+ (MPError *)errorWithCode:(MPErrorCode)code
++ (MPError *)errorWithCode:(MPMPErrorCode)code
 {
     return [self errorWithDomain:kMPErrorDomain code:code userInfo:nil];
 }

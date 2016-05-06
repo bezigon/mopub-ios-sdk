@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-#import "Fabric.h"
+#import <Fabric/Fabric.h>
 
 @protocol FABKit;
 // Use this category for methods that kits can call on Fabric.
