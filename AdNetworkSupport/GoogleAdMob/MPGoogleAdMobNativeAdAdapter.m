@@ -36,10 +36,7 @@
         dictionary[kAdTextKey] = adNative.body;
     }
     if (adNative.images[0]) {
-        dictionary[kAdMainImageKey] = adNative.images[0];
-    }
-    if (adNative.logo) {
-        dictionary[kAdIconImageKey] = adNative.logo;
+        dictionary[kAdMainImageKey] = ((GADNativeAdImage *)adNative.images[0]).imageURL.absoluteString;
     }
     if (adNative.callToAction) {
         dictionary[kAdCTATextKey] = adNative.callToAction;
@@ -58,6 +55,20 @@
 {
     [self.delegate nativeAdWillLogImpression:self];
 }
+
+- (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
+{
+    if (!controller) {
+        return;
+    }
+    
+    if (!URL || ![URL isKindOfClass:[NSURL class]] || ![URL.absoluteString length]) {
+        return;
+    }
+    
+    [self.destinationDisplayAgent displayDestinationForURL:URL];
+}
+
 
 - (NSURL *)defaultActionURL
 {
