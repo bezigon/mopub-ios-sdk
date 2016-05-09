@@ -15,6 +15,7 @@
 @property(nonatomic, strong)GADNativeContentAd *contentAd;
 @property(nonatomic, readonly)NSDictionary *properties;
 @property(nonatomic, weak) id<MPNativeAdAdapterDelegate> delegate;
+@property(nonatomic, strong)NSString *url;
 
 - (instancetype)initWithGADNativeContentAd:(GADNativeContentAd *)contentAD;
 

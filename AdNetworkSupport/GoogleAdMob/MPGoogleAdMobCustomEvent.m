@@ -15,7 +15,7 @@
 
 @interface MPGoogleAdMobCustomEvent()
 @property(nonatomic, strong)GADAdLoader *loader;
-@property(nonatomic, strong)MPGoogleAdMobNativeAdAdapter *adapter;
+@property(nonatomic, strong)NSString *url;
 @end
 
 @implementation MPGoogleAdMobCustomEvent
@@ -25,13 +25,19 @@
     MPLogInfo(@"MOPUB: requesting AdMob Native Ad");
     
     NSString *adUnitID = [info objectForKey:@"adUnitID"];
-    self.adapter = [[MPGoogleAdMobNativeAdAdapter alloc] init];
-    UIViewController *vc = [self.adapter.delegate viewControllerForPresentingModalView];
     
-    self.loader = [[GADAdLoader alloc] initWithAdUnitID:@"ca-app-pub-3940256099942544/3986624511" rootViewController:vc  adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
+//    if (!adUnitID) {
+//        adUnitID = @"ca-app-pub-0268871989845966/1853944109";
+//    }
+//    
+//#ifdef DEBUG
+    adUnitID = @"ca-app-pub-3940256099942544/3986624511";
+//#endif
+    
+    self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil  adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
     self.loader.delegate = self;
     GADRequest *request = [GADRequest request];
-    request.testDevices = @[ kGADSimulatorID ];
+//    request.testDevices = @[ kGADSimulatorID ];
     CLLocation *location = [[CLLocationManager alloc] init].location;
     if (location) {
         [request setLocationWithLatitude:location.coordinate.latitude
@@ -39,6 +45,9 @@
                                 accuracy:location.horizontalAccuracy];
     }
     
+    NSString *clickURL = info[@"clk"];
+    self.url = clickURL;
+
     request.requestAgent = @"MoPub";
     [self.loader loadRequest:request];
 }
@@ -48,6 +57,7 @@
     MPLogDebug(@"MOPUB: Did receive nativeAd");
 
     MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeContentAd:nativeContentAd];
+    adapter.url = self.url;
     MPNativeAd *interfaceAd = [[MPNativeAd alloc] initWithAdAdapter:adapter];
     [self.delegate nativeCustomEvent:self didLoadAd:interfaceAd];
     

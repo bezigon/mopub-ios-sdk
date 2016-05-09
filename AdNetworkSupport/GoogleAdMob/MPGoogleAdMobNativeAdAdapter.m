@@ -45,28 +45,24 @@
         dictionary[kAdCTATextKey] = adNative.callToAction;
     }
     
-    if (adNative.extraAssets[kDefaultActionURLKey]) {
-        dictionary[kDefaultActionURLKey] = adNative.extraAssets[kDefaultActionURLKey];
-        
-        
-        
-//        dictionary[kDefaultActionURLKey] = adNative.advertiser;
-    }
+//    if (self.url) {
+//        dictionary[kDefaultActionURLKey] = self.url;
+//    }
 
     return [dictionary copy];
 }
 
 #pragma mark MPNativeAdAdapter
 
-- (void)trackClick {
-    
-    [self.delegate nativeAdDidClick:self];
-}
-
-- (void)trackImpression
-{
-    [self.delegate nativeAdWillLogImpression:self];
-}
+//- (void)trackClick {
+//    
+//    [self.delegate nativeAdDidClick:self];
+//}
+//
+//- (void)trackImpression
+//{
+//    [self.delegate nativeAdWillLogImpression:self];
+//}
 
 //- (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
 //{
@@ -84,6 +80,7 @@
 
 - (NSURL *)defaultActionURL
 {
+    //return [NSURL URLWithString: self.url];
     return nil;
 }
 
@@ -125,34 +122,34 @@
     }
 }
 
-- (void)nativeAdWillDismissScreen:(GADNativeAd *)nativeAd
-{
-    if ([self.delegate respondsToSelector:@selector(nativeAdDidDismissModalForAdapter:)]) {
-        [self.delegate nativeAdDidDismissModalForAdapter:self];
-    }
-}
+//- (void)nativeAdWillDismissScreen:(GADNativeAd *)nativeAd
+//{
+//    if ([self.delegate respondsToSelector:@selector(nativeAdDidDismissModalForAdapter:)]) {
+//        [self.delegate nativeAdDidDismissModalForAdapter:self];
+//    }
+//}
 
-
-#pragma mark - <MPAdDestinationDisplayAgentDelegate>
-
-- (UIViewController *)viewControllerForPresentingModalView
-{
-    return [self.delegate viewControllerForPresentingModalView];
-}
-
-- (void)displayAgentWillPresentModal
-{
-    [self.delegate nativeAdWillPresentModalForAdapter:self];
-}
-
-- (void)displayAgentWillLeaveApplication
-{
-    [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
-}
-
-- (void)displayAgentDidDismissModal
-{
-    [self.delegate nativeAdDidDismissModalForAdapter:self];
-}
+//
+//#pragma mark - <MPAdDestinationDisplayAgentDelegate>
+//
+//- (UIViewController *)viewControllerForPresentingModalView
+//{
+//    return [self.delegate viewControllerForPresentingModalView];
+//}
+//
+//- (void)displayAgentWillPresentModal
+//{
+//    [self.delegate nativeAdWillPresentModalForAdapter:self];
+//}
+//
+//- (void)displayAgentWillLeaveApplication
+//{
+//    [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
+//}
+//
+//- (void)displayAgentDidDismissModal
+//{
+//    [self.delegate nativeAdDidDismissModalForAdapter:self];
+//}
 
 @end
