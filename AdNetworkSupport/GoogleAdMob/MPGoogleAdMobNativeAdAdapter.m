@@ -8,9 +8,11 @@
 
 #import "MPGoogleAdMobNativeAdAdapter.h"
 #import "MoPub.h"
+#import "MPAdDestinationDisplayAgent.h"
 
-@interface MPGoogleAdMobNativeAdAdapter()<GADNativeAdDelegate>
+@interface MPGoogleAdMobNativeAdAdapter()<GADNativeAdDelegate, MPAdDestinationDisplayAgentDelegate>
 @property(nonatomic, strong)NSDictionary *properties;
+@property (nonatomic, strong) MPAdDestinationDisplayAgent *destinationDisplayAgent;
 @end
 
 @implementation MPGoogleAdMobNativeAdAdapter
@@ -22,6 +24,7 @@
         self.contentAd = contentAD;
         self.contentAd.delegate = self;
         self.properties = [self convertAssetsToProperties:contentAD];
+        self.destinationDisplayAgent = [MPAdDestinationDisplayAgent agentWithDelegate:self];
     }
     return self;
 }
@@ -41,6 +44,15 @@
     if (adNative.callToAction) {
         dictionary[kAdCTATextKey] = adNative.callToAction;
     }
+    
+    if (adNative.extraAssets[kDefaultActionURLKey]) {
+        dictionary[kDefaultActionURLKey] = adNative.extraAssets[kDefaultActionURLKey];
+        
+        
+        
+//        dictionary[kDefaultActionURLKey] = adNative.advertiser;
+    }
+
     return [dictionary copy];
 }
 
@@ -56,23 +68,38 @@
     [self.delegate nativeAdWillLogImpression:self];
 }
 
-- (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
-{
-    if (!controller) {
-        return;
-    }
-    
-    if (!URL || ![URL isKindOfClass:[NSURL class]] || ![URL.absoluteString length]) {
-        return;
-    }
-    
-    [self.destinationDisplayAgent displayDestinationForURL:URL];
-}
+//- (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
+//{
+//    if (!controller) {
+//        return;
+//    }
+//    
+//    if (!URL || ![URL isKindOfClass:[NSURL class]] || ![URL.absoluteString length]) {
+//        return;
+//    }
+//    
+//    [self.destinationDisplayAgent displayDestinationForURL:URL];
+//}
 
 
 - (NSURL *)defaultActionURL
 {
     return nil;
+}
+
+- (BOOL)enableThirdPartyClickTracking
+{
+    return YES;
+}
+
+- (void)willAttachToView:(UIView *)view
+{
+    self.contentAd.rootViewController = [self.delegate viewControllerForPresentingModalView];
+}
+
+- (void)didDetachFromView:(UIView *)view
+{
+    self.contentAd.rootViewController = nil;
 }
 
 #pragma mark GADNativeAdDelegate
@@ -97,4 +124,35 @@
         [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
     }
 }
+
+- (void)nativeAdWillDismissScreen:(GADNativeAd *)nativeAd
+{
+    if ([self.delegate respondsToSelector:@selector(nativeAdDidDismissModalForAdapter:)]) {
+        [self.delegate nativeAdDidDismissModalForAdapter:self];
+    }
+}
+
+
+#pragma mark - <MPAdDestinationDisplayAgentDelegate>
+
+- (UIViewController *)viewControllerForPresentingModalView
+{
+    return [self.delegate viewControllerForPresentingModalView];
+}
+
+- (void)displayAgentWillPresentModal
+{
+    [self.delegate nativeAdWillPresentModalForAdapter:self];
+}
+
+- (void)displayAgentWillLeaveApplication
+{
+    [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
+}
+
+- (void)displayAgentDidDismissModal
+{
+    [self.delegate nativeAdDidDismissModalForAdapter:self];
+}
+
 @end
