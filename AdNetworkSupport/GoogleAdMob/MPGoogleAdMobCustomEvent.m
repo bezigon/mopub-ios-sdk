@@ -12,6 +12,7 @@
 #import "MoPub.h"
 #import "MPNativeAd.h"
 #import "MPGoogleAdMobNativeAdAdapter.h"
+#include "TargetConditionals.h"
 
 @interface MPGoogleAdMobCustomEvent()
 @property(nonatomic, strong)GADAdLoader *loader;
@@ -26,18 +27,20 @@
     
     NSString *adUnitID = [info objectForKey:@"adUnitID"];
     
-//    if (!adUnitID) {
-//        adUnitID = @"ca-app-pub-0268871989845966/1853944109";
-//    }
-//    
-//#ifdef DEBUG
-    adUnitID = @"ca-app-pub-3940256099942544/3986624511";
-//#endif
+    if (!adUnitID) {
+        adUnitID = @"ca-app-pub-0268871989845966/1853944109";
+    }
     
     self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil  adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
     self.loader.delegate = self;
     GADRequest *request = [GADRequest request];
-//    request.testDevices = @[ kGADSimulatorID ];
+    
+#if (TARGET_OS_SIMULATOR)
+    
+    request.testDevices = @[ kGADSimulatorID ];
+    
+#endif
+    
     CLLocation *location = [[CLLocationManager alloc] init].location;
     if (location) {
         [request setLocationWithLatitude:location.coordinate.latitude
@@ -59,8 +62,25 @@
     MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeContentAd:nativeContentAd];
     adapter.url = self.url;
     MPNativeAd *interfaceAd = [[MPNativeAd alloc] initWithAdAdapter:adapter];
-    [self.delegate nativeCustomEvent:self didLoadAd:interfaceAd];
     
+    NSMutableArray *imageArray = [NSMutableArray array];
+    
+    for (GADNativeAdImage *images in nativeContentAd.images) {
+        
+        [imageArray addObject:images.imageURL];
+        
+    }
+    
+    
+    [super precacheImagesWithURLs:imageArray completionBlock:^(NSArray *errors) {
+        
+        if ([errors count]) {
+            [self.delegate nativeCustomEvent:self didFailToLoadAdWithError:errors[0]];
+        } else {
+            [self.delegate nativeCustomEvent:self didLoadAd:interfaceAd];
+        }
+   
+    }];
 }
 
 - (void)adLoader:(GADAdLoader *)adLoader didFailToReceiveAdWithError:(GADRequestError *)error
