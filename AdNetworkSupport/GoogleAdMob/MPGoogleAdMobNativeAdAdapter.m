@@ -31,6 +31,7 @@
 
 - (NSDictionary *)convertAssetsToProperties:(GADNativeContentAd *)adNative
 {
+    self.contentAd = adNative;
     NSMutableDictionary * dictionary = [NSMutableDictionary dictionary];
     if (adNative.headline) {
         dictionary[kAdTitleKey] = adNative.headline;
@@ -44,60 +45,49 @@
     if (adNative.callToAction) {
         dictionary[kAdCTATextKey] = adNative.callToAction;
     }
-    
-//    if (self.url) {
-//        dictionary[kDefaultActionURLKey] = self.url;
-//    }
-
     return [dictionary copy];
 }
 
 #pragma mark MPNativeAdAdapter
-
-//- (void)trackClick {
-//    
-//    [self.delegate nativeAdDidClick:self];
-//}
-//
-//- (void)trackImpression
-//{
-//    [self.delegate nativeAdWillLogImpression:self];
-//}
-
-//- (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
-//{
-//    if (!controller) {
-//        return;
-//    }
-//    
-//    if (!URL || ![URL isKindOfClass:[NSURL class]] || ![URL.absoluteString length]) {
-//        return;
-//    }
-//    
-//    [self.destinationDisplayAgent displayDestinationForURL:URL];
-//}
-
+- (NSTimeInterval)requiredSecondsForImpression
+{
+    return 0.0;
+}
 
 - (NSURL *)defaultActionURL
 {
-    //return [NSURL URLWithString: self.url];
-    return nil;
+    return [NSURL URLWithString: [@"http://" stringByAppendingString:self.url]];
 }
 
-- (BOOL)enableThirdPartyClickTracking
+- (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
 {
-    return YES;
+    if (!controller) {
+        return;
+    }
+    
+    if (!URL || ![URL isKindOfClass:[NSURL class]] || ![URL.absoluteString length]) {
+        return;
+    }
+    
+    [self.destinationDisplayAgent displayDestinationForURL:URL];
 }
 
 - (void)willAttachToView:(UIView *)view
 {
     self.contentAd.rootViewController = [self.delegate viewControllerForPresentingModalView];
+    [self.delegate nativeAdWillLogImpression:self];
 }
 
 - (void)didDetachFromView:(UIView *)view
 {
     self.contentAd.rootViewController = nil;
 }
+
+- (void)trackClick
+{
+    [self.delegate nativeAdDidClick:self];
+}
+
 
 #pragma mark GADNativeAdDelegate
 
@@ -122,34 +112,26 @@
     }
 }
 
-//- (void)nativeAdWillDismissScreen:(GADNativeAd *)nativeAd
-//{
-//    if ([self.delegate respondsToSelector:@selector(nativeAdDidDismissModalForAdapter:)]) {
-//        [self.delegate nativeAdDidDismissModalForAdapter:self];
-//    }
-//}
-
-//
-//#pragma mark - <MPAdDestinationDisplayAgentDelegate>
-//
-//- (UIViewController *)viewControllerForPresentingModalView
-//{
-//    return [self.delegate viewControllerForPresentingModalView];
-//}
-//
-//- (void)displayAgentWillPresentModal
-//{
-//    [self.delegate nativeAdWillPresentModalForAdapter:self];
-//}
-//
-//- (void)displayAgentWillLeaveApplication
-//{
-//    [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
-//}
-//
-//- (void)displayAgentDidDismissModal
-//{
-//    [self.delegate nativeAdDidDismissModalForAdapter:self];
-//}
-
+- (UIViewController *)viewControllerForPresentingModalView
+{
+    return self.contentAd.rootViewController;
+}
+- (void)displayAgentWillPresentModal
+{
+    if ([self.delegate respondsToSelector:@selector(nativeAdWillPresentModalForAdapter:)]) {
+        [self.delegate nativeAdWillPresentModalForAdapter:self];
+    }
+}
+- (void)displayAgentWillLeaveApplication
+{
+    if ([self.delegate respondsToSelector:@selector(nativeAdWillLeaveApplicationFromAdapter:)]) {
+        [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
+    }
+}
+- (void)displayAgentDidDismissModal
+{
+    if ([self.delegate respondsToSelector:@selector(nativeAdDidDismissModalForAdapter:)]) {
+        [self.delegate nativeAdDidDismissModalForAdapter:self];
+    }
+}
 @end

@@ -16,7 +16,6 @@
 
 @interface MPGoogleAdMobCustomEvent()
 @property(nonatomic, strong)GADAdLoader *loader;
-@property(nonatomic, strong)NSString *url;
 @end
 
 @implementation MPGoogleAdMobCustomEvent
@@ -28,7 +27,10 @@
     NSString *adUnitID = [info objectForKey:@"adUnitID"];
     
     if (!adUnitID) {
-        adUnitID = @"ca-app-pub-0268871989845966/1853944109";
+        
+        [self.delegate nativeCustomEvent:self didFailToLoadAdWithError:MPNativeAdNSErrorForInvalidAdServerResponse(@"MOPUB: No AdUnitID from GoogleAdMob")];
+
+        return;
     }
     
     self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil  adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
@@ -47,10 +49,6 @@
                                longitude:location.coordinate.longitude
                                 accuracy:location.horizontalAccuracy];
     }
-    
-    NSString *clickURL = info[@"clk"];
-    self.url = clickURL;
-
     request.requestAgent = @"MoPub";
     [self.loader loadRequest:request];
 }
@@ -60,7 +58,7 @@
     MPLogDebug(@"MOPUB: Did receive nativeAd");
 
     MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeContentAd:nativeContentAd];
-    adapter.url = self.url;
+    adapter.url = nativeContentAd.advertiser;
     MPNativeAd *interfaceAd = [[MPNativeAd alloc] initWithAdAdapter:adapter];
     
     NSMutableArray *imageArray = [NSMutableArray array];
