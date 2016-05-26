@@ -490,7 +490,10 @@ static char kAdPlacerKey;
         NSArray *indexPaths = [self mp_indexPathsForVisibleItems];
         NSMutableArray *visibleCells = [NSMutableArray array];
         for (NSIndexPath *indexPath in indexPaths) {
-            [visibleCells addObject:[self mp_cellForItemAtIndexPath:indexPath]];
+            UICollectionViewCell *cell = [self mp_cellForItemAtIndexPath:indexPath];
+            if(cell){
+                [visibleCells addObject:cell];
+            }
         }
         return visibleCells;
     } else {
