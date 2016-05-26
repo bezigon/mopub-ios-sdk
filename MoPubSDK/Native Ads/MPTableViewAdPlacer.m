@@ -582,7 +582,10 @@ static char kAdPlacerKey;
         NSArray *indexPaths = [self mp_indexPathsForVisibleRows];
         NSMutableArray *visibleCells = [NSMutableArray array];
         for (NSIndexPath *indexPath in indexPaths) {
-            [visibleCells addObject:[self mp_cellForRowAtIndexPath:indexPath]];
+            UITableViewCell *cell = [self mp_cellForRowAtIndexPath:indexPath];
+            if(cell){
+                [visibleCells addObject:cell];
+            }
         }
         return visibleCells;
     } else {
