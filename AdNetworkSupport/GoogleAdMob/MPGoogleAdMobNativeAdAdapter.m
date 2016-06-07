@@ -39,8 +39,10 @@
     if (adNative.body) {
         dictionary[kAdTextKey] = adNative.body;
     }
-    if (adNative.images[0]) {
-        dictionary[kAdMainImageKey] = ((GADNativeAdImage *)adNative.images[0]).imageURL.absoluteString;
+    if ([adNative.images count] > 0){
+        if(adNative.images[0]) {
+            dictionary[kAdMainImageKey] = ((GADNativeAdImage *)adNative.images[0]).imageURL.absoluteString;
+        }
     }
     if (adNative.callToAction) {
         dictionary[kAdCTATextKey] = adNative.callToAction;
