@@ -10,55 +10,61 @@
 #import "MoPub.h"
 #import "MPAdDestinationDisplayAgent.h"
 
-@interface MPGoogleAdMobNativeAdAdapter()<GADNativeAdDelegate, MPAdDestinationDisplayAgentDelegate>
-@property(nonatomic, strong)NSDictionary *properties;
-@property (nonatomic, strong) MPAdDestinationDisplayAgent *destinationDisplayAgent;
+@interface MPGoogleAdMobNativeAdAdapter() <GADNativeAdDelegate, MPAdDestinationDisplayAgentDelegate>
+@property(nonatomic, strong) GADNativeContentAd *nativeContentAd;
+@property(nonatomic, strong) NSDictionary *properties;
+@property(nonatomic, strong) MPAdDestinationDisplayAgent *destinationDisplayAgent;
 @end
 
 @implementation MPGoogleAdMobNativeAdAdapter
 
-- (instancetype)initWithGADNativeContentAd:(GADNativeContentAd *)contentAD
+- (instancetype)initWithGADNativeContentAd:(GADNativeContentAd *)nativeContentAd
 {
     self = [super init];
     if (self) {
-        self.contentAd = contentAD;
-        self.contentAd.delegate = self;
-        self.properties = [self convertAssetsToProperties:contentAD];
+        self.nativeContentAd = nativeContentAd;
+        self.nativeContentAd.delegate = self;
+        self.properties = [self convertAssetsToProperties:nativeContentAd];
         self.destinationDisplayAgent = [MPAdDestinationDisplayAgent agentWithDelegate:self];
     }
     return self;
 }
 
-- (NSDictionary *)convertAssetsToProperties:(GADNativeContentAd *)adNative
+- (NSDictionary *)convertAssetsToProperties:(GADNativeContentAd *)nativeContentAd
 {
-    self.contentAd = adNative;
     NSMutableDictionary * dictionary = [NSMutableDictionary dictionary];
-    if (adNative.headline) {
-        dictionary[kAdTitleKey] = adNative.headline;
+    if (nativeContentAd.headline) {
+        dictionary[kAdTitleKey] = nativeContentAd.headline;
     }
-    if (adNative.body) {
-        dictionary[kAdTextKey] = adNative.body;
+    if (nativeContentAd.body) {
+        dictionary[kAdTextKey] = nativeContentAd.body;
     }
-    if ([adNative.images count] > 0){
-        if(adNative.images[0]) {
-            dictionary[kAdMainImageKey] = ((GADNativeAdImage *)adNative.images[0]).imageURL.absoluteString;
+    if ([nativeContentAd.images count] > 0){
+        if(nativeContentAd.images[0]) {
+            dictionary[kAdMainImageKey] = ((GADNativeAdImage *)nativeContentAd.images[0]).imageURL.absoluteString;
         }
     }
-    if (adNative.callToAction) {
-        dictionary[kAdCTATextKey] = adNative.callToAction;
+    if (nativeContentAd.callToAction) {
+        dictionary[kAdCTATextKey] = nativeContentAd.callToAction;
     }
     return [dictionary copy];
 }
 
-#pragma mark MPNativeAdAdapter
+#pragma mark - MPNativeAdAdapter
+
 - (NSTimeInterval)requiredSecondsForImpression
 {
     return 0.0;
 }
 
+- (BOOL)enableThirdPartyClickTracking
+{
+    return YES;
+}
+
 - (NSURL *)defaultActionURL
 {
-    return [NSURL URLWithString: [@"http://" stringByAppendingString:self.url]];
+    return [NSURL URLWithString: [@"http://" stringByAppendingString:self.nativeContentAd.advertiser]];
 }
 
 - (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
@@ -76,20 +82,24 @@
 
 - (void)willAttachToView:(UIView *)view
 {
-    self.contentAd.rootViewController = [self.delegate viewControllerForPresentingModalView];
+    self.nativeContentAd.rootViewController = [self.delegate viewControllerForPresentingModalView];
     [self.delegate nativeAdWillLogImpression:self];
+}
+
+- (void)didAttachToView:(UIView *)view
+{
+    for (UIView *subview in view.subviews) {
+        if([subview isKindOfClass:[GADNativeContentAdView class]]){
+            ((GADNativeContentAdView *)subview).nativeContentAd = self.nativeContentAd;
+            break;
+        }
+    }
 }
 
 - (void)didDetachFromView:(UIView *)view
 {
-    self.contentAd.rootViewController = nil;
+    self.nativeContentAd.rootViewController = nil;
 }
-
-- (void)trackClick
-{
-    [self.delegate nativeAdDidClick:self];
-}
-
 
 #pragma mark GADNativeAdDelegate
 
@@ -97,6 +107,9 @@
 {
     if ([self.delegate respondsToSelector:@selector(nativeAdWillPresentModalForAdapter:)]) {
         [self.delegate nativeAdWillPresentModalForAdapter:self];
+    }
+    if ([self.delegate respondsToSelector:@selector(nativeAdDidClick:)]) {
+        [self.delegate nativeAdDidClick:self];
     }
 }
 
@@ -112,28 +125,43 @@
     if ([self.delegate respondsToSelector:@selector(nativeAdWillLeaveApplicationFromAdapter:)]) {
         [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
     }
+    if ([self.delegate respondsToSelector:@selector(nativeAdDidClick:)]) {
+        [self.delegate nativeAdDidClick:self];
+    }
 }
+
+#pragma mark - MPAdDestinationDisplayAgentDelegate
 
 - (UIViewController *)viewControllerForPresentingModalView
 {
-    return self.contentAd.rootViewController;
+    return self.nativeContentAd.rootViewController;
 }
+
 - (void)displayAgentWillPresentModal
 {
     if ([self.delegate respondsToSelector:@selector(nativeAdWillPresentModalForAdapter:)]) {
         [self.delegate nativeAdWillPresentModalForAdapter:self];
     }
+    if ([self.delegate respondsToSelector:@selector(nativeAdDidClick:)]) {
+        [self.delegate nativeAdDidClick:self];
+    }
 }
+
 - (void)displayAgentWillLeaveApplication
 {
     if ([self.delegate respondsToSelector:@selector(nativeAdWillLeaveApplicationFromAdapter:)]) {
         [self.delegate nativeAdWillLeaveApplicationFromAdapter:self];
     }
+    if ([self.delegate respondsToSelector:@selector(nativeAdDidClick:)]) {
+        [self.delegate nativeAdDidClick:self];
+    }
 }
+
 - (void)displayAgentDidDismissModal
 {
     if ([self.delegate respondsToSelector:@selector(nativeAdDidDismissModalForAdapter:)]) {
         [self.delegate nativeAdDidDismissModalForAdapter:self];
     }
 }
+
 @end

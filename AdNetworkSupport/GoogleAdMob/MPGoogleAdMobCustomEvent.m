@@ -27,13 +27,11 @@
     NSString *adUnitID = [info objectForKey:@"adUnitID"];
     
     if (!adUnitID) {
-        
         [self.delegate nativeCustomEvent:self didFailToLoadAdWithError:MPNativeAdNSErrorForInvalidAdServerResponse(@"MOPUB: No AdUnitID from GoogleAdMob")];
-
         return;
     }
     
-    self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil  adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
+    self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
     self.loader.delegate = self;
     GADRequest *request = [GADRequest request];
     
@@ -58,26 +56,22 @@
     MPLogDebug(@"MOPUB: Did receive nativeAd");
 
     MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeContentAd:nativeContentAd];
-    adapter.url = nativeContentAd.advertiser;
     MPNativeAd *interfaceAd = [[MPNativeAd alloc] initWithAdAdapter:adapter];
     
     NSMutableArray *imageArray = [NSMutableArray array];
     
     for (GADNativeAdImage *images in nativeContentAd.images) {
-        
-        [imageArray addObject:images.imageURL];
-        
+        if(images.imageURL){
+            [imageArray addObject:images.imageURL];
+        }
     }
     
-    
     [super precacheImagesWithURLs:imageArray completionBlock:^(NSArray *errors) {
-        
         if ([errors count]) {
             [self.delegate nativeCustomEvent:self didFailToLoadAdWithError:errors[0]];
         } else {
             [self.delegate nativeCustomEvent:self didLoadAd:interfaceAd];
         }
-   
     }];
 }
 

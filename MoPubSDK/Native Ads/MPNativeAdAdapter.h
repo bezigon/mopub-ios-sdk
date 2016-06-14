@@ -158,6 +158,7 @@
  * of this event.
  */
 - (void)willAttachToView:(UIView *)view;
+- (void)didAttachToView:(UIView *)view;
 
 /**
  * This method will be called if your implementation provides a DAA icon through the properties dictionary

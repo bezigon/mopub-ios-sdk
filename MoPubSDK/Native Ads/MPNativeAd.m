@@ -91,7 +91,9 @@
 
         adView.frame = self.associatedView.bounds;
         [self.associatedView addSubview:adView];
-
+        
+        [self didAttachToView:self.associatedView];
+        
         return self.associatedView;
     } else {
         return nil;
@@ -152,6 +154,13 @@
 {
     if ([self.adAdapter respondsToSelector:@selector(willAttachToView:)]) {
         [self.adAdapter willAttachToView:view];
+    }
+}
+
+- (void)didAttachToView:(UIView *)view
+{
+    if ([self.adAdapter respondsToSelector:@selector(didAttachToView:)]) {
+        [self.adAdapter didAttachToView:view];
     }
 }
 
