@@ -14,6 +14,6 @@
 
 @property(nonatomic, weak) id<MPNativeAdAdapterDelegate> delegate;
 
-- (instancetype)initWithGADNativeContentAd:(GADNativeContentAd *)contentAD;
+- (instancetype)initWithGADNativeAd:(GADNativeAd *)nativeAd;
 
 @end

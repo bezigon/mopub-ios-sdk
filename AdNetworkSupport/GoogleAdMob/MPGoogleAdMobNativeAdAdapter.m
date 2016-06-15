@@ -11,43 +11,74 @@
 #import "MPAdDestinationDisplayAgent.h"
 
 @interface MPGoogleAdMobNativeAdAdapter() <GADNativeAdDelegate, MPAdDestinationDisplayAgentDelegate>
-@property(nonatomic, strong) GADNativeContentAd *nativeContentAd;
+@property(nonatomic, strong) GADNativeAd *nativeAd;
 @property(nonatomic, strong) NSDictionary *properties;
 @property(nonatomic, strong) MPAdDestinationDisplayAgent *destinationDisplayAgent;
 @end
 
 @implementation MPGoogleAdMobNativeAdAdapter
 
-- (instancetype)initWithGADNativeContentAd:(GADNativeContentAd *)nativeContentAd
+- (instancetype)initWithGADNativeAd:(GADNativeAd *)nativeAd;
 {
     self = [super init];
     if (self) {
-        self.nativeContentAd = nativeContentAd;
-        self.nativeContentAd.delegate = self;
-        self.properties = [self convertAssetsToProperties:nativeContentAd];
+        self.nativeAd = nativeAd;
+        self.nativeAd.delegate = self;
+        self.properties = [self convertAssetsToProperties:nativeAd];
         self.destinationDisplayAgent = [MPAdDestinationDisplayAgent agentWithDelegate:self];
     }
     return self;
 }
 
-- (NSDictionary *)convertAssetsToProperties:(GADNativeContentAd *)nativeContentAd
+- (NSDictionary *)convertAssetsToProperties:(GADNativeAd *)nativeAd
 {
-    NSMutableDictionary * dictionary = [NSMutableDictionary dictionary];
-    if (nativeContentAd.headline) {
-        dictionary[kAdTitleKey] = nativeContentAd.headline;
-    }
-    if (nativeContentAd.body) {
-        dictionary[kAdTextKey] = nativeContentAd.body;
-    }
-    if ([nativeContentAd.images count] > 0){
-        if(nativeContentAd.images[0]) {
-            dictionary[kAdMainImageKey] = ((GADNativeAdImage *)nativeContentAd.images[0]).imageURL.absoluteString;
+    if([nativeAd isKindOfClass:[GADNativeContentAd class]]){
+        GADNativeContentAd *nativeContentAd = (GADNativeContentAd *)nativeAd;
+        NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+        if (nativeContentAd.headline) {
+            dictionary[kAdTitleKey] = nativeContentAd.headline;
         }
+        if (nativeContentAd.body) {
+            dictionary[kAdTextKey] = nativeContentAd.body;
+        }
+        if ([nativeContentAd.images count] > 0){
+            if(nativeContentAd.images[0]) {
+                dictionary[kAdMainImageKey] = ((GADNativeAdImage *)nativeContentAd.images[0]).imageURL.absoluteString;
+            }
+        }
+        if (nativeContentAd.callToAction) {
+            dictionary[kAdCTATextKey] = nativeContentAd.callToAction;
+        }
+        if(nativeAd){
+            dictionary[@"nativeAd"] = nativeAd;
+        }
+        return dictionary;
+    } else if([nativeAd isKindOfClass:[GADNativeAppInstallAd class]]){
+        GADNativeAppInstallAd *nativeAppInstallAd = (GADNativeAppInstallAd *)nativeAd;
+        NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+        if (nativeAppInstallAd.headline) {
+            dictionary[kAdTitleKey] = nativeAppInstallAd.headline;
+        }
+        if (nativeAppInstallAd.body) {
+            dictionary[kAdTextKey] = nativeAppInstallAd.body;
+        }
+        if ([nativeAppInstallAd.images count] > 0){
+            if(nativeAppInstallAd.images[0]) {
+                dictionary[kAdMainImageKey] = ((GADNativeAdImage *)nativeAppInstallAd.images[0]).imageURL.absoluteString;
+            }
+        }
+        if (nativeAppInstallAd.callToAction) {
+            dictionary[kAdCTATextKey] = nativeAppInstallAd.callToAction;
+        }
+        if (nativeAppInstallAd.starRating) {
+            dictionary[kAdStarRatingKey] = nativeAppInstallAd.starRating;
+        }
+        if(nativeAd){
+            dictionary[@"nativeAd"] = nativeAd;
+        }
+        return dictionary;
     }
-    if (nativeContentAd.callToAction) {
-        dictionary[kAdCTATextKey] = nativeContentAd.callToAction;
-    }
-    return [dictionary copy];
+    return nil;
 }
 
 #pragma mark - MPNativeAdAdapter
@@ -64,7 +95,10 @@
 
 - (NSURL *)defaultActionURL
 {
-    return [NSURL URLWithString: [@"http://" stringByAppendingString:self.nativeContentAd.advertiser]];
+    if([self.nativeAd isKindOfClass:[GADNativeContentAd class]]){
+        return [NSURL URLWithString: [@"http://" stringByAppendingString:((GADNativeContentAd *)self.nativeAd).advertiser]];
+    }
+    return nil;
 }
 
 - (void)displayContentForURL:(NSURL *)URL rootViewController:(UIViewController *)controller
@@ -82,23 +116,13 @@
 
 - (void)willAttachToView:(UIView *)view
 {
-    self.nativeContentAd.rootViewController = [self.delegate viewControllerForPresentingModalView];
+    self.nativeAd.rootViewController = [self.delegate viewControllerForPresentingModalView];
     [self.delegate nativeAdWillLogImpression:self];
-}
-
-- (void)didAttachToView:(UIView *)view
-{
-    for (UIView *subview in view.subviews) {
-        if([subview isKindOfClass:[GADNativeContentAdView class]]){
-            ((GADNativeContentAdView *)subview).nativeContentAd = self.nativeContentAd;
-            break;
-        }
-    }
 }
 
 - (void)didDetachFromView:(UIView *)view
 {
-    self.nativeContentAd.rootViewController = nil;
+    self.nativeAd.rootViewController = nil;
 }
 
 #pragma mark GADNativeAdDelegate
@@ -134,7 +158,7 @@
 
 - (UIViewController *)viewControllerForPresentingModalView
 {
-    return self.nativeContentAd.rootViewController;
+    return self.nativeAd.rootViewController;
 }
 
 - (void)displayAgentWillPresentModal

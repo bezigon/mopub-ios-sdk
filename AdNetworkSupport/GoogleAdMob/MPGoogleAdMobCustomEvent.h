@@ -8,6 +8,6 @@
 
 #import "MPNativeCustomEvent.h"
 
-@interface MPGoogleAdMobCustomEvent : MPNativeCustomEvent<GADAdLoaderDelegate, GADNativeContentAdLoaderDelegate>
+@interface MPGoogleAdMobCustomEvent : MPNativeCustomEvent<GADAdLoaderDelegate, GADNativeContentAdLoaderDelegate, GADNativeAppInstallAdLoaderDelegate>
 
 @end

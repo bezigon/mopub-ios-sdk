@@ -31,7 +31,7 @@
         return;
     }
     
-    self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil adTypes:@[kGADAdLoaderAdTypeNativeContent] options:nil];
+    self.loader = [[GADAdLoader alloc] initWithAdUnitID:adUnitID rootViewController:nil adTypes:@[kGADAdLoaderAdTypeNativeContent,kGADAdLoaderAdTypeNativeAppInstall] options:nil];
     self.loader.delegate = self;
     GADRequest *request = [GADRequest request];
     
@@ -51,11 +51,34 @@
     [self.loader loadRequest:request];
 }
 
+- (void)adLoader:(GADAdLoader *)adLoader didReceiveNativeAppInstallAd:(GADNativeAppInstallAd *)nativeAppInstallAd {
+    MPLogDebug(@"MOPUB: Did receive app install ad");
+    
+    MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeAd:nativeAppInstallAd];
+    MPNativeAd *interfaceAd = [[MPNativeAd alloc] initWithAdAdapter:adapter];
+    
+    NSMutableArray *imageArray = [NSMutableArray array];
+    
+    for (GADNativeAdImage *images in nativeAppInstallAd.images) {
+        if(images.imageURL){
+            [imageArray addObject:images.imageURL];
+        }
+    }
+    
+    [super precacheImagesWithURLs:imageArray completionBlock:^(NSArray *errors) {
+        if ([errors count]) {
+            [self.delegate nativeCustomEvent:self didFailToLoadAdWithError:errors[0]];
+        } else {
+            [self.delegate nativeCustomEvent:self didLoadAd:interfaceAd];
+        }
+    }];
+}
+
 - (void)adLoader:(GADAdLoader *)adLoader didReceiveNativeContentAd:(GADNativeContentAd *)nativeContentAd
 {
     MPLogDebug(@"MOPUB: Did receive nativeAd");
 
-    MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeContentAd:nativeContentAd];
+    MPGoogleAdMobNativeAdAdapter *adapter = [[MPGoogleAdMobNativeAdAdapter alloc] initWithGADNativeAd:nativeContentAd];
     MPNativeAd *interfaceAd = [[MPNativeAd alloc] initWithAdAdapter:adapter];
     
     NSMutableArray *imageArray = [NSMutableArray array];
